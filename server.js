@@ -4,7 +4,10 @@ const PORT = process.env.PORT || 3001
 
 const io = new Server(PORT, {
   cors: {
-    origin: "*",
+    origin: [
+      "http://localhost:3000",
+      "https://gacha-self.vercel.app/"
+    ]
   },
 })
 
