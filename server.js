@@ -1,51 +1,39 @@
+const express = require("express")
+const http = require("http")
 const { Server } = require("socket.io")
 
-const PORT = process.env.PORT || 3001
+const app = express()
+const server = http.createServer(app)
 
-const io = new Server(PORT, {
+// 🔥 CORS CHUẨN PRODUCTION
+const io = new Server(server, {
   cors: {
     origin: [
       "http://localhost:3000",
-      "https://gacha-self.vercel.app/"
-    ]
+      "https://gacha-self.vercel.app"
+    ],
+    methods: ["GET", "POST"],
   },
 })
-
-let currentItems = []
-let forcedIndex = null
 
 io.on("connection", (socket) => {
   console.log("✅ connected:", socket.id)
 
-  socket.emit("list:update", currentItems)
-
   socket.on("list:update", (list) => {
-    currentItems = list
-    forcedIndex = null
-    io.emit("list:update", currentItems)
-  })
-
-  socket.on("admin:select", (index) => {
-    forcedIndex = index
+    io.emit("list:update", list)
   })
 
   socket.on("spin", () => {
-    if (!currentItems.length) return
-
-    let index
-
-    if (
-      forcedIndex !== null &&
-      forcedIndex >= 0 &&
-      forcedIndex < currentItems.length
-    ) {
-      index = forcedIndex
-    } else {
-      index = Math.floor(Math.random() * currentItems.length)
-    }
-
-    forcedIndex = null
-
-    io.emit("spin:result", index)
+    io.emit("spin:result", Math.floor(Math.random() * 5))
   })
+})
+
+// 🔥 test route để check deploy OK
+app.get("/", (req, res) => {
+  res.send("Socket server OK 🚀")
+})
+
+const PORT = process.env.PORT || 3001
+server.listen(PORT, () => {
+  console.log("🚀 running on", PORT)
 })
